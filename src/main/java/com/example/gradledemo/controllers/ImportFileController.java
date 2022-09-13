@@ -27,12 +27,14 @@ public class ImportFileController {
         boolean isValidItems = request.getItems().stream().allMatch((x) -> {
                    SystemItem item = new SystemItem(x, request.getUpdateDate());
                    if(item.isValidImport(true)) {
-                       boolean B = x.getParentId() == null;
+                       if (x.getParentId() == null) return true;
                        Optional<SystemItem> optionalItem = systemItemRepository.findById(x.getParentId());
+                       //элемент с id, совпадающим с parentid текущего элемента, нашёлся в базе и оказался файлом
                        boolean C = optionalItem.isPresent() && optionalItem.get().getType().getType().equals("FILE");
+                       //элемент с id, совпадающим с parentid текущего элемента, нашёлся в запросе и оказался файлом
                        boolean D = request.getItems().stream().anyMatch((y) ->
-                               (y.getId() == x.getParentId()) && y.getType().getType().equals("FILE"));
-                       return B || (!C && !D);
+                               (y.getId().equals(x.getParentId())) && y.getType().getType().equals("FILE"));
+                       return !C && !D;
                    } else
                        return false;
         });

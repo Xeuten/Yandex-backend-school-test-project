@@ -4,6 +4,7 @@ import com.example.gradledemo.model.SystemItem;
 import com.example.gradledemo.persistence.Database;
 import com.example.gradledemo.persistence.SystemItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,7 @@ public class DeleteFileController {
         if(item.isPresent()) {
            if(item.get().isValidImport(false)) {
                base.systemItemDelete(item.get());
-               return ResponseEntity.status(200).body(new HashMap<>());
+               return new ResponseEntity<>(HttpStatus.OK);
            } else {
                map.put("code", 400);
                map.put("message", "Validation Failed");
