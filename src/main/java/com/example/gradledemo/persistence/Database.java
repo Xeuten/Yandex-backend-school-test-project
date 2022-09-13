@@ -32,7 +32,7 @@ public class Database {
     }
 
     public void systemItemDelete(SystemItem item) {
-        if (item.getType().getType() == "FILE") {
+        if (item.getType().getType().equals("FILE")) {
             systemItemRepository.delete(item);
         } else {
             new ArrayList<SystemItem>(systemItemRepository.findByParentId(item.getId())).forEach(this::systemItemDelete);
