@@ -2,6 +2,7 @@ version: '3'
 services:
   app:
     image: my-app
+    restart: unless-stopped
     build:
       context: .
     ports:
@@ -9,7 +10,8 @@ services:
     depends_on:
       - mypostgres
   mypostgres:
-    image: postgres
+    image: postgres:14.5
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
