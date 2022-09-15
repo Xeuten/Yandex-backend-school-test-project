@@ -9,9 +9,7 @@ import java.util.HashMap;
 @Table(name="main")
 public class SystemItem {
 
-    public SystemItem() {
-
-    }
+    public SystemItem() {}
 
     public SystemItem(SystemItemImport importItem, Date date) {
         this.id = importItem.getId();
@@ -43,8 +41,9 @@ public class SystemItem {
     @Enumerated(EnumType.STRING)
     private SystemItemType type;
 
-   @Transient
-   // @NamedNativeQuery(name="childrenQuery", query="select")
+    // В базе данных не хранятся дочерние элементы папок. Они заполняются только при составлении
+    // ответа на get запрос.
+    @Transient
     private ArrayList<SystemItem> children;
 
     public SystemItemType getType() {
@@ -103,10 +102,7 @@ public class SystemItem {
         this.children = children;
     }
 
-    public String toString() {
-        return this.getType().getType();
-    }
-
+    // При преобразовании папки в хэшмапу заполняется её дочерние элементы
     public HashMap<String, Object> toHashMap() {
         HashMap<String, Object> outputMap = new HashMap<>();
         outputMap.put("id", this.getId());
@@ -127,7 +123,9 @@ public class SystemItem {
         return outputMap;
     }
 
-    public boolean isValidImport(boolean isImport) {
+    // Этот метод проверяет элемент на корректность формата. Так как условия корректности различаются
+    // при импорте элемента и при получении/удалении из базы, он принимает аргумент, уточняющий формат
+    public boolean isValidItem(boolean isImport) {
         return !(this.getType().getType().equals("FILE") && (this.getSize() <= 0 || this.getUrl().length() > 255))
                 && !(this.getType().getType().equals("FOLDER") && ((this.getSize() != null && isImport)
                     || this.getUrl() != null))

@@ -10,6 +10,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.util.HashMap;
 
+
+// Этот хендлер нужен в одном случае - если аннотация RequestBody не сможет преобразовать тело
+// запроса в объект SystemItemImportRequest
 @RestControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 

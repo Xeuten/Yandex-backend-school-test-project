@@ -14,12 +14,6 @@ public class SystemItemImportRequest {
         this.updateDate = updateDate;
     }
 
-    public String toString(){
-        return items.stream().map((x) -> x.getId() + x.getUrl() + x.getParentId() + x.getType()
-                )
-                .collect(Collectors.joining(", "));
-    }
-
     public ArrayList<SystemItemImport> getItems() {
         return items;
     }
@@ -36,6 +30,7 @@ public class SystemItemImportRequest {
         this.updateDate = updateDate;
     }
 
+    // Этот метод проверяет, все ли id элементов из запроса на импорт уникальны
     public boolean validateIdsUnicity() {
         ArrayList<String> ids = new ArrayList<>(this.getItems().stream().map(SystemItemImport::getId).toList());
         return new HashSet<String>(ids).size() == ids.size();
