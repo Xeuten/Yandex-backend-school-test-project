@@ -16,14 +16,14 @@ public class SystemItemService {
     @Autowired
     private SystemItemRepository systemItemRepository;
 
-    private ResponseEntity<HashMap<String, Object>> code400Response() {
+    public ResponseEntity<HashMap<String, Object>> code400Response() {
         HashMap<String, Object> outputMap = new HashMap<>();
         outputMap.put("code", 400);
         outputMap.put("message", "Validation Failed");
         return ResponseEntity.status(400).body(outputMap);
     }
 
-    private ResponseEntity<HashMap<String, Object>> code404Response() {
+    public ResponseEntity<HashMap<String, Object>> code404Response() {
         HashMap<String, Object> outputMap = new HashMap<>();
         outputMap.put("code", 404);
         outputMap.put("message", "Item not found");
