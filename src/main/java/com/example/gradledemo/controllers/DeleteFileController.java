@@ -19,12 +19,9 @@ public class DeleteFileController {
     @Autowired
     SystemItemService deleteService;
 
-    @DeleteMapping({"/delete/{id}", "/delete/"})
+    @DeleteMapping({"/delete/{id}", "/delete"})
     @ResponseBody
     public ResponseEntity<HashMap<String, Object>> deleteFiles(@PathVariable @Nullable String id) {
-        if(id == null) {
-            return deleteService.code400Response();
-        }
         return deleteService.deleteFilesResponse(id);
     }
 }

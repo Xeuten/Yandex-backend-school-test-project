@@ -9,17 +9,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 
 @RestController
-public class FindFileController {
+public class FindRecentController {
 
     @Autowired
-    SystemItemService findService;
+    SystemItemService findRecentService;
 
-    @GetMapping({"/nodes/{id}", "/nodes"})
+    @GetMapping("/updates")
     @ResponseBody
-    public ResponseEntity<HashMap<String, Object>> findFiles(@PathVariable @Nullable String id) {
-        return findService.findFilesResponse(id);
+    public ResponseEntity<HashMap<String, Object>> findRecentFiles(@RequestBody @Nullable String id) {
+        return findRecentService.findRecentFilesResponse(id);
     }
-
-
 
 }
