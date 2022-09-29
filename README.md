@@ -6,4 +6,4 @@
 Собрать dockerimage приложения с помощью `sudo docker-compose build`.
 
 # Работа
-Приложение способно обрабатывать запросы `/imports`, `/delete/{id}` и `/nodes/{id}`.
+Приложение способно обрабатывать запросы `/imports`, `/delete/{id}`, `/nodes/{id}` и `/updates`.
