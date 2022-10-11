@@ -15,7 +15,7 @@ import java.util.HashMap;
 public class ImportFileController {
 
     @Autowired
-    SystemItemService importService;
+    private SystemItemService importService;
 
     @PostMapping("/imports")
     @ResponseBody

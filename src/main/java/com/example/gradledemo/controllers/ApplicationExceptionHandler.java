@@ -10,12 +10,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.util.HashMap;
 
-
-// Этот хендлер нужен в одном случае - если аннотация RequestBody не сможет преобразовать тело
-// запроса в объект SystemItemImportRequest
+// This handler has one purpose - to handle the case when @RequestBody annotation didn't manage to
+// convert request body into SystemItemImportRequest object
 @RestControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
-
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
         HashMap<String, Object> map = new HashMap<>();

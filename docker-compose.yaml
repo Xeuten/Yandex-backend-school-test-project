@@ -12,9 +12,16 @@ services:
   mypostgres:
     image: postgres:14.5
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=POSTGRES
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=mydb
+      - POSTGRES_DB=postgres
+  rabbitmq:
+    image: 'rabbitmq:3.6-management-alpine'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      AMQP_URL: 'amqp://rabbitmq?connection_attempts=5&retry_delay=5'
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"

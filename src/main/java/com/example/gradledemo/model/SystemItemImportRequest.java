@@ -3,7 +3,6 @@ package com.example.gradledemo.model;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 
 public class SystemItemImportRequest {
     private ArrayList<SystemItemImport> items;
@@ -30,7 +29,7 @@ public class SystemItemImportRequest {
         this.updateDate = updateDate;
     }
 
-    // Этот метод проверяет, все ли id элементов из запроса на импорт уникальны
+    //This method checks if all ids of the import request are unique
     public boolean validateIdsUnicity() {
         ArrayList<String> ids = new ArrayList<>(this.getItems().stream().map(SystemItemImport::getId).toList());
         return new HashSet<String>(ids).size() == ids.size();

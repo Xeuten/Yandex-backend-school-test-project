@@ -13,19 +13,16 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'com.fasterxml.jackson.core:jackson-core'
-	implementation 'com.fasterxml.jackson.core:jackson-annotations'
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.projectlombok:lombok'
 	implementation 'org.postgresql:postgresql:42.5.0'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.7.3'
-	implementation 'org.json:json:20220320'
+	implementation 'com.rabbitmq:amqp-client:5.16.0'
+	implementation 'org.springframework.amqp:spring-rabbit:2.4.7'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine'
 	testImplementation 'org.mockito:mockito-junit-jupiter'
-	testImplementation 'com.h2database:h2:2.1.214'
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation 'org.mockito:mockito-core:4.8.0'
 }

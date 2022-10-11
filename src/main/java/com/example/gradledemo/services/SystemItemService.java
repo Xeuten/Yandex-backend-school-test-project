@@ -3,6 +3,7 @@ package com.example.gradledemo.services;
 import com.example.gradledemo.model.SystemItem;
 import com.example.gradledemo.model.SystemItemImportRequest;
 import com.example.gradledemo.persistence.SystemItemRepository;
+import com.example.gradledemo.rabbitmq.RabbitMQSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,42 +18,49 @@ import java.util.*;
 public class SystemItemService {
 
     @Autowired
+    private RabbitMQSender rabbitMQSender;
+
+    @Autowired
     private SystemItemRepository systemItemRepository;
 
-    public ResponseEntity<HashMap<String, Object>> code400Response() {
+    private ResponseEntity<HashMap<String, Object>> code400Response() {
         HashMap<String, Object> outputMap = new HashMap<>();
         outputMap.put("code", 400);
         outputMap.put("message", "Validation Failed");
         return ResponseEntity.status(400).body(outputMap);
     }
 
-    public ResponseEntity<HashMap<String, Object>> code404Response() {
+    private ResponseEntity<HashMap<String, Object>> code404Response() {
         HashMap<String, Object> outputMap = new HashMap<>();
         outputMap.put("code", 404);
         outputMap.put("message", "Item not found");
         return ResponseEntity.status(404).body(outputMap);
     }
 
-    public ResponseEntity<HashMap<String, Object>> findFilesResponse(@Nullable String id) {
+    public ResponseEntity<HashMap<String, Object>> findFilesResponse(@Nullable String id, String userAgentValue) {
+        String metainfo = userAgentValue + "/GET";
         if(id == null) {
+            rabbitMQSender.sendMessage(code400Response(), metainfo);
             return code400Response();
         }
         Optional<SystemItem> outputItem = systemItemRepository.findById(id);
         outputItem.ifPresent(this::recursiveChildren);
-        if(outputItem.isPresent()) {
-            if(!outputItem.get().isValidItem(false)) {
-                return code400Response();
-            } else {
-                return ResponseEntity.status(HttpStatus.OK).body(outputItem.get().toHashMap());
-            }
-        } else {
+        if(outputItem.isEmpty()) {
+            rabbitMQSender.sendMessage(code404Response(), metainfo);
             return code404Response();
+        }
+        if(!outputItem.get().isValidItem(false)) {
+            rabbitMQSender.sendMessage(code400Response(), metainfo);
+            return code400Response();
+        } else {
+            rabbitMQSender.sendMessage(ResponseEntity.status(HttpStatus.OK).body(outputItem.get().toHashMap()), metainfo);
+            return ResponseEntity.status(HttpStatus.OK).body(outputItem.get().toHashMap());
         }
     }
 
-    // Этот метод применяется только к папкам. В нём происходит заполнение поля children
-    // для данной папки и всех папок, являющихся её потомками. Также заполняется поле size.
-    void recursiveChildren(SystemItem ancestor) {
+    // This method is applied to folders only. Inside it the children field is filled for the
+    // current folder and all its descendants. The field size is also filled.
+    private void recursiveChildren(SystemItem ancestor) {
         if(ancestor.getType().getType().equals("FOLDER")) {
             ArrayList<SystemItem> children = new ArrayList<>(systemItemRepository.findByParentId(ancestor.getId()));
             ancestor.setChildren(children);
@@ -65,16 +73,17 @@ public class SystemItemService {
         }
     }
 
-    // Этот метод формирует ответ на запрос на импорт с учётом проверки запроса на корректный формат.
+    // This method creates a response to an import request with respect to validation of
+    // the request's format.
     public ResponseEntity<HashMap<String, Object>> importFilesResponse(SystemItemImportRequest request) {
         boolean isValidItems = request.getItems().stream().allMatch((x) -> {
             SystemItem item = new SystemItem(x, request.getUpdateDate());
             if(item.isValidItem(true)) {
                 if (x.getParentId() == null) return true;
                 Optional<SystemItem> optionalItem = systemItemRepository.findById(x.getParentId());
-                //элемент с id, совпадающим с parentid текущего элемента, нашёлся в базе и оказался файлом
+                //an element with an id, matching with parentid of the current element, was found in db and turned out to be a file
                 boolean C = optionalItem.isPresent() && optionalItem.get().getType().getType().equals("FILE");
-                //элемент с id, совпадающим с parentid текущего элемента, нашёлся в запросе и оказался файлом
+                //an element with an id, matching with parentid of the current element, was found in the request and turned out to be a file
                 boolean D = request.getItems().stream().anyMatch((y) ->
                         (y.getId().equals(x.getParentId())) && y.getType().getType().equals("FILE"));
                 return !C && !D;
@@ -82,8 +91,8 @@ public class SystemItemService {
                 return false;
         });
 
-        // В условии проверяется, все ли элементы из запроса имеют корректный формат, не
-        // конфликтуют с базой и между собой.
+        // In the if-clause is checked, if all elements of the request have correct format and
+        // play well with each other and with db
         if (request.validateIdsUnicity() && isValidItems) {
             request.getItems().forEach((x) -> systemItemRepository.save(new SystemItem(x, request.getUpdateDate())));
             return new ResponseEntity<>(HttpStatus.OK);
@@ -92,42 +101,50 @@ public class SystemItemService {
         }
     }
 
-    public ResponseEntity<HashMap<String, Object>> deleteFilesResponse(@Nullable String id) {
+    public ResponseEntity<HashMap<String, Object>> deleteFilesResponse(@Nullable String id, String userAgentValue) {
+        String metainfo = userAgentValue + "/DELETE";
         if(id == null) {
+            rabbitMQSender.sendMessage(code400Response(), metainfo);
             return code400Response();
         }
         Optional<SystemItem> item = systemItemRepository.findById(id);
-        if(item.isPresent()) {
-            if(item.get().isValidItem(false)) {
-                systemItemDelete(item.get());
-                return new ResponseEntity<>(HttpStatus.OK);
-            } else {
-                return code400Response();
-            }
-        } else {
+        if(item.isEmpty()) {
+            rabbitMQSender.sendMessage(code400Response(), metainfo);
             return code404Response();
+        }
+        if(item.get().isValidItem(false)) {
+            systemItemDelete(item.get());
+            rabbitMQSender.sendMessage(new ResponseEntity<>(HttpStatus.OK), metainfo);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            rabbitMQSender.sendMessage(code400Response(), metainfo);
+            return code400Response();
         }
     }
 
-    // Этот метод удаляет элемент и, в случае папки, всех её потомков из базы.
-    public void systemItemDelete(SystemItem item) {
+    //This method deletes an element and if it's a folder, all its descendants from the db
+    private void systemItemDelete(SystemItem item) {
         systemItemRepository.delete(item);
-        if (item.getType().getType().equals("FOLDER"))
+        if (item.getType().getType().equals("FOLDER")) {
             new ArrayList<SystemItem>(systemItemRepository.findByParentId(item.getId())).forEach(this::systemItemDelete);
+        }
     }
 
-    public ResponseEntity<HashMap<String, Object>> findRecentFilesResponse(@Nullable String date) {
+    public ResponseEntity<HashMap<String, Object>> findRecentFilesResponse(@Nullable String date, String userAgentValue) {
+        String metainfo = userAgentValue + "/UPDATES";
         if(date == null || ISO8601parser(date).isEmpty()) {
+            rabbitMQSender.sendMessage(code400Response(), metainfo);
             return code400Response();
         }
         HashMap<String, Object> outputMap = new HashMap<>();
         outputMap.put("items", new ArrayList<>(systemItemRepository
                 .findRecent(ISO8601parser(date).get(), ISO8601parser(date).get().minusDays(1)).stream().filter((x)
                         -> x.getType().getType().equals("FILE")).map(SystemItem::toHashMap).toList()));
+        rabbitMQSender.sendMessage(ResponseEntity.status(HttpStatus.OK).body(outputMap), metainfo);
         return ResponseEntity.status(HttpStatus.OK).body(outputMap);
     }
 
-    public static Optional<OffsetDateTime> ISO8601parser(String str) {
+    private Optional<OffsetDateTime> ISO8601parser(String str) {
         ArrayList<String> dateComponents = new ArrayList<>(Arrays.asList(str.split("-")));
         if (dateComponents.size() != 3 || dateComponents.get(0).length() != 4
                 || dateComponents.get(1).length() != 2) {

@@ -41,8 +41,9 @@ public class SystemItem {
     @Enumerated(EnumType.STRING)
     private SystemItemType type;
 
-    // В базе данных не хранятся дочерние элементы папок. Они заполняются только при составлении
-    // ответа на get запрос.
+
+    // Children of folders are not stored in the db. They are filled only in the course of
+    // creating a response to "get" request
     @Transient
     private ArrayList<SystemItem> children;
 
@@ -102,7 +103,7 @@ public class SystemItem {
         this.children = children;
     }
 
-    // При преобразовании папки в хэшмапу заполняется её дочерние элементы
+    // In the course of converting a folder into a hashmap its children are filled
     public HashMap<String, Object> toHashMap() {
         HashMap<String, Object> outputMap = new HashMap<>();
         outputMap.put("id", this.getId());
@@ -123,8 +124,9 @@ public class SystemItem {
         return outputMap;
     }
 
-    // Этот метод проверяет элемент на корректность формата. Так как условия корректности различаются
-    // при импорте элемента и при получении/удалении из базы, он принимает аргумент, уточняющий формат
+
+    // This method validates an element's format correct. Since the validating conditions differ for
+    // import and find/delete requests, the method has an argument which verifies the type of request
     public boolean isValidItem(boolean isImport) {
         return !(this.getType().getType().equals("FILE") && (this.getSize() <= 0 || this.getUrl().length() > 255))
                 && !(this.getType().getType().equals("FOLDER") && ((this.getSize() != null && isImport)
