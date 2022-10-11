@@ -1,5 +1,5 @@
 # Build
-Make sure that Docker is installed. Build application's dockerimage with `sudo docker-co mpose build`.
+Make sure that Docker is installed. Build application's dockerimage with `sudo docker-compose build`.
 
 # Launch
 Launch dockerimage with `sudo docker-compose up -d`.
